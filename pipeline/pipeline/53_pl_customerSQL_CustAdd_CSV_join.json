@@ -1,0 +1,38 @@
+{
+	"name": "53_pl_customerSQL_CustAdd_CSV_join",
+	"properties": {
+		"description": "This pipeline is to read the Customer table data from SQL and customer address data from CSV, joins both, and then saves the result where customer id> 1000 & Customer id <2000 in ascending order as a Parquet file.",
+		"activities": [
+			{
+				"name": "df_custSQL_CustAddCSV_Join",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_custSQL_CustAddCSV_Join",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-05T13:31:57Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

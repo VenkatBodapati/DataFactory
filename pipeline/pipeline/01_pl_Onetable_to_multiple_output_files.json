@@ -1,0 +1,132 @@
+{
+	"name": "01_pl_Onetable_to_multiple_output_files",
+	"properties": {
+		"description": "From Azure SQL table, split the table data into multiple CSV files based on the category.",
+		"activities": [
+			{
+				"name": "Get Product Categories",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT PC.Name AS CategoryName,ProductCategoryID\nFROM SalesLt.ProductCategory PC",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_SQL_Dynamic_table",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": "salesLt",
+							"table": "product"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Product Categories",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Product Categories').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "SELECT P.*\nFROM SalesLt.Product P\nwhere  P.ProductCategoryID = '@{item().ProductCategoryID}'",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_SQL_Dynamic_table",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema": "salesLt",
+										"table": "product"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_adls_landing_output_dynamic",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@concat(item().CategoryName,'.csv')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "Self"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-08T05:28:31Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

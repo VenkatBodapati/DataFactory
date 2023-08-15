@@ -1,0 +1,67 @@
+{
+	"name": "34_pl_Customer_Product_CustomerAddress",
+	"properties": {
+		"description": "This pipeline move the data from 3 different tables (Customer, Product, CustomerAddress) to ADLS location in CSV format. It should be designed in such a manner that All these copy happens through an individual pipeline, which is called by one common pipeline.",
+		"activities": [
+			{
+				"name": "Execute customer",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "13_pl_Copy_Customer_To_CSV_Pipe",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Execute product",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute customer",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "10_pl_Copy_ProductTable_To_CSV",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Execute customer address",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute product",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "22_pl_Ingest_customer_address_adls",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-03T16:21:09Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

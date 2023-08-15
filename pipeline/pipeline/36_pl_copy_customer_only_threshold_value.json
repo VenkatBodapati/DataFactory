@@ -1,0 +1,112 @@
+{
+	"name": "36_pl_copy_customer_only_threshold_value",
+	"properties": {
+		"description": "load this file into your ADLS location. This file contains a threshold value. Create a pipeline in such a manner that, it will first get the threshold value from this file and then check if the record count in the customer table is more than it or not. If yes then copy the customer data from SQL db to ADLS location in JSON format.",
+		"activities": [
+			{
+				"name": "Get threshold value",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_adls_practise_1_generic",
+						"type": "DatasetReference",
+						"parameters": {
+							"filename": "ThresholdValue.txt"
+						}
+					}
+				}
+			},
+			{
+				"name": "customer count greater than Threshold value",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get threshold value",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Get customer count",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(activity('Get customer count').output.firstRow.Cnt,int(activity('Get threshold value').output.firstRow.ThresholdValue))",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Execute Copy customer",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "13_pl_Copy_Customer_To_CSV_Pipe",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Get customer count",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT COUNT(1) AS Cnt FROM SalesLt.Customer",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_AzureSQL_customer",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-03T17:03:36Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

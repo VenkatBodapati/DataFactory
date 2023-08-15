@@ -1,0 +1,152 @@
+{
+	"name": "21_pl_Onpremise_AzureSQL_DM",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetMappingDetails",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_adls_landing_input_dynamic_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"m_file": {
+								"value": "@pipeline().parameters.mapping_file",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetMappingDetails",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetMappingDetails').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy data Onprem - Azure SQL",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "@{concat('DROP TABLE IF EXISTS ',item().SinkSchema,'.', item().SinkTable)}",
+										"type": "Expression"
+									},
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"tableOption": "autoCreate",
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_sqlserver_onpremise_dynamic",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema": {
+											"value": "@item().SourceSchema",
+											"type": "Expression"
+										},
+										"table": {
+											"value": "@item().SourceTable",
+											"type": "Expression"
+										},
+										"DBName": {
+											"value": "@item().SourceDB",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_SQL_Dynamic_table",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema": {
+											"value": "@item().SinkSchema",
+											"type": "Expression"
+										},
+										"table": {
+											"value": "@item().SinkTable",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"mapping_file": {
+				"type": "string",
+				"defaultValue": "Onpremise_datamigration_mapping.csv"
+			}
+		},
+		"folder": {
+			"name": "Self"
+		},
+		"annotations": []
+	}
+}

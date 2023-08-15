@@ -1,0 +1,222 @@
+{
+	"name": "01_pl_http_ecdc_covid_data",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup mapping file",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_ecdc_file_mapping_Json",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup mapping file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup mapping file').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "baseUrl",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "BaseUrl",
+								"value": {
+									"value": "@item().BaseUrl",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "RelativeUrl",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "baseUrl",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "RelativeURL",
+								"value": {
+									"value": "@item().SourceRelativeUrl",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SinkFileName",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "RelativeUrl",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "SinkFileName",
+								"value": {
+									"value": "@item().SinkFileName",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Copy ECDC data",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "SinkFileName",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_http_ecdc_covid19",
+									"type": "DatasetReference",
+									"parameters": {
+										"BaseURL": {
+											"value": "@variables('BaseUrl')",
+											"type": "Expression"
+										},
+										"RelativeURL": {
+											"value": "@variables('RelativeURL')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_adls_raw_ecdc_csv",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@variables('SinkFileName')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"BaseUrl": {
+				"type": "String"
+			},
+			"RelativeURL": {
+				"type": "String"
+			},
+			"SinkFileName": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Covid_19"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-14T05:18:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

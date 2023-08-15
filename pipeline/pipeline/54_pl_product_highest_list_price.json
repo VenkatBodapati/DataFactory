@@ -1,0 +1,38 @@
+{
+	"name": "54_pl_product_highest_list_price",
+	"properties": {
+		"description": "This pipeline is to read the Product CSV file and calculate the highest list price of any product under each product category.\nEnsure that the product shouldn't be blue in color and save the result as a CSV file inside the ProductResult folder.",
+		"activities": [
+			{
+				"name": "df_product_high_list_price",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_product_high_list_price",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-05T14:52:59Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

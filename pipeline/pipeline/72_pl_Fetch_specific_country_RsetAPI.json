@@ -1,0 +1,188 @@
+{
+	"name": "72_pl_Fetch_specific_country_RsetAPI",
+	"properties": {
+		"description": "This pipeline is to fetch the 5 countries (india,us,uk,china,russia) data from Rest API (https://restcountries.com/v3.1/name/{name}  here replace the {name} with Country name like https://restcountries.com/v3.1/name/us) and save it in separate file as JSON with File name equal to Country name.",
+		"activities": [
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "country_names",
+					"value": [
+						"india",
+						"us",
+						"uk",
+						"china",
+						"russia"
+					]
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Set variable1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('country_names')",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copydata",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "JsonSource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET"
+									},
+									"formatSettings": {
+										"type": "JsonReadSettings"
+									}
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_http_country_generic_Json",
+									"type": "DatasetReference",
+									"parameters": {
+										"countryname": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_mission100_country_Json",
+									"type": "DatasetReference",
+									"parameters": {
+										"FileName": {
+											"value": "@concat(item(),'.json')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "OnSuccess",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "ForEach1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://prod-81.eastus.logic.azure.com:443/workflows/ccfcfa3332204b57b58662dfee51826f/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=RuzIcbU5cbwNAjCgVHLdpCYnh8dDiu7i7Z5-3IqS_nE",
+					"method": "POST",
+					"headers": {
+						"Content_Type": "application/json"
+					},
+					"body": {
+						"value": "{\n    \"ADFName\": \"@{pipeline().DataFactory}\",\n    \"ErrorMessage\": \"\",\n    \"PipelineRunID\": \"@{pipeline().RunId}\",  \n    \"executionDate\": \"@{utcNow()}\",  \n    \"pipeline\": \"@{pipeline().Pipeline}\",\n    \"status\": \"Success\"\n}",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "OnFail",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "ForEach1",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://prod-81.eastus.logic.azure.com:443/workflows/ccfcfa3332204b57b58662dfee51826f/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=RuzIcbU5cbwNAjCgVHLdpCYnh8dDiu7i7Z5-3IqS_nE",
+					"method": "POST",
+					"headers": {
+						"Content_Type": "application/json"
+					},
+					"body": {
+						"value": "{\n    \"ADFName\": \"@{pipeline().DataFactory}\",\n    \"ErrorMessage\": \"Success\",\n    \"PipelineRunID\": \"@{pipeline().RunId}\",  \n    \"executionDate\": \"@{utcNow()}\",  \n    \"pipeline\": \"@{pipeline().Pipeline}\",\n    \"status\": \"Fail\",\n}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"country_names": {
+				"type": "Array"
+			},
+			"Message": {
+				"type": "String"
+			},
+			"v_filename": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-07T15:39:48Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

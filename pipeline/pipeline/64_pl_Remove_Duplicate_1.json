@@ -1,0 +1,38 @@
+{
+	"name": "64_pl_Remove_Duplicate_1",
+	"properties": {
+		"description": "Remove duplicate records that includes CustomerID.",
+		"activities": [
+			{
+				"name": "df_exclude_duplicate_records",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_exclude_duplicate_records",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-07T04:16:30Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

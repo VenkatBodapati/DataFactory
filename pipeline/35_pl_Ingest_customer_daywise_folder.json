@@ -1,0 +1,75 @@
+{
+	"name": "35_pl_Ingest_customer_daywise_folder",
+	"properties": {
+		"description": "Ensure that all the data goes into\nFolder like (Customer/Year/Month/Day) to avoid any overwriting",
+		"activities": [
+			{
+				"name": "Copy customer",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_AzureSQL_Generic",
+						"type": "DatasetReference",
+						"parameters": {
+							"tablename": "customer"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_adls_customer_day_folder",
+						"type": "DatasetReference",
+						"parameters": {
+							"DateFolders": {
+								"value": "@concat(formatDateTime(utcNow(), 'yyyy'),'/',formatDateTime(utcNow(), 'MM'),'/',formatDateTime(utcNow(), 'dd'))",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-03T16:42:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

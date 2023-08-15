@@ -1,0 +1,64 @@
+{
+	"name": "71_pl_Fetch_all_countries_data_RestAPI",
+	"properties": {
+		"description": "This pipeline is to fetch the All countries data from Rest API (https://restcountries.com/v3.1/all) and save it as parquet file in ADLS.",
+		"activities": [
+			{
+				"name": "Copy data",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "GET"
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_http_countries_json",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_Mission100_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"filename": "all_countries.parquet"
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-07T04:50:08Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

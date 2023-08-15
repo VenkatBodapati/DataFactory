@@ -1,0 +1,38 @@
+{
+	"name": "52_pl_join_Customer_Customer_Address",
+	"properties": {
+		"description": "Create a pipeline to join the two files (Customer, Customer Address) based on the customer id and save the result as a JSON file.",
+		"activities": [
+			{
+				"name": "df_customer_customer_address_join",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_customer_customer_address_join",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-05T12:33:42Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

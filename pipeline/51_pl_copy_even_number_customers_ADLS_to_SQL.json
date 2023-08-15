@@ -1,0 +1,43 @@
+{
+	"name": "51_pl_copy_even_number_customers_ADLS_to_SQL",
+	"properties": {
+		"description": "This pipeline is to copy the customer data from a CSV file to SQL where a customer id is an even number. ",
+		"activities": [
+			{
+				"name": "Even numbered Customers",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_even_num_customer",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"SQLdb": {
+								"tablename": "Customer_Copy"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-05T12:12:13Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

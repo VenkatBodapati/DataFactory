@@ -1,0 +1,34 @@
+{
+	"name": "ds_adls_input_Excel_kv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_kv",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"sheet": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Self"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Customer_excel_Source.xlsx",
+				"folderPath": "input",
+				"fileSystem": "landing"
+			},
+			"sheetIndex": {
+				"value": "@int(dataset().sheet)",
+				"type": "Expression"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

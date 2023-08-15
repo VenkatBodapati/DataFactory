@@ -1,0 +1,129 @@
+{
+	"name": "df_SCD_Type_2",
+	"properties": {
+		"folder": {
+			"name": "Self"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_AzureSql_dynamic_kv",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_AzureSql_dynamic_kv",
+						"type": "DatasetReference"
+					},
+					"name": "CustDestination"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_AzureSql_dynamic_kv",
+						"type": "DatasetReference"
+					},
+					"name": "CustDestinationInsert"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_AzureSql_dynamic_kv",
+						"type": "DatasetReference"
+					},
+					"name": "CustDestinationUpdate"
+				}
+			],
+			"transformations": [
+				{
+					"name": "lookup1"
+				},
+				{
+					"name": "ExistedRec"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "AlterRow1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CustomerID as long,",
+				"          CustomerName as string,",
+				"          Phone as string,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> CustomerSource",
+				"source(output(",
+				"          CustSurrKey as long,",
+				"          CustomerID as long,",
+				"          CustomerName as string,",
+				"          Phone as string,",
+				"          InActiveFlag as boolean,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> CustDestination",
+				"CustomerSource, CustDestination lookup(CustomerSource@CustomerID == CustDestination@CustomerID,",
+				"     multiple: true,",
+				"     broadcast: 'auto')~> lookup1",
+				"lookup1 filter(!isNull(CustDestination@CustomerID)) ~> ExistedRec",
+				"ExistedRec select(mapColumn(",
+				"          CustSurrKey,",
+				"          CustomerID = CustDestination@CustomerID,",
+				"          CustomerName = CustDestination@CustomerName,",
+				"          Phone = CustDestination@Phone,",
+				"          InActiveFlag,",
+				"          ModifiedDate = CustDestination@ModifiedDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 derive(InActiveFlag = 1) ~> derivedColumn1",
+				"derivedColumn1 alterRow(updateIf(true())) ~> AlterRow1",
+				"CustomerSource sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 2,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          CustomerID,",
+				"          CustomerName,",
+				"          Phone,",
+				"          ModifiedDate",
+				"     )) ~> CustDestinationInsert",
+				"AlterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['CustSurrKey'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> CustDestinationUpdate"
+			]
+		}
+	}
+}

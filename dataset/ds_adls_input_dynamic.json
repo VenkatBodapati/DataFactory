@@ -1,0 +1,36 @@
+{
+	"name": "ds_adls_input_dynamic",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_Adls",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"d_filename": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Self"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().d_filename",
+					"type": "Expression"
+				},
+				"folderPath": "input",
+				"fileSystem": "landing"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

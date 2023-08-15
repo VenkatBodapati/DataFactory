@@ -1,0 +1,19 @@
+{
+	"name": "ds_FileSystem_Binary_folder",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_FileServer",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Self"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "FileServerLocation"
+			}
+		}
+	}
+}

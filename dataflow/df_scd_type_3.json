@@ -1,0 +1,184 @@
+{
+	"name": "df_scd_type_3",
+	"properties": {
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_SQL_Customer_SCD_Type_3",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerSQL"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_adls_mission100_generic",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerADLS"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_SQL_Customer_SCD_Type_3",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_SQL_Customer_SCD_Type_3",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "join1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "select2"
+				},
+				{
+					"name": "AlterRow1"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "select3"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CID as integer,",
+				"          CName as string,",
+				"          EmailID as string,",
+				"          PreviousEmailID as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> CustomerSQL",
+				"source(output(",
+				"          CustomerID as integer,",
+				"          NameStyle as boolean,",
+				"          Title as string,",
+				"          FirstName as string,",
+				"          MiddleName as string,",
+				"          LastName as string,",
+				"          Suffix as string,",
+				"          CompanyName as string,",
+				"          SalesPerson as string,",
+				"          EmailAddress as string,",
+				"          Phone as string,",
+				"          PasswordHash as string,",
+				"          PasswordSalt as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> CustomerADLS",
+				"CustomerADLS, CustomerSQL join(CustomerID == CID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"join1 select(mapColumn(",
+				"          CustomerID,",
+				"          FirstName,",
+				"          LastName,",
+				"          EmailAddress,",
+				"          CID,",
+				"          CName,",
+				"          EmailID,",
+				"          PreviousEmailID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 derive(CustomerFullName = concat(FirstName,' ', LastName),",
+				"          OldEmailID = EmailAddress,",
+				"          NewPrevEmailID = iif((EmailAddress != EmailID),EmailID,PreviousEmailID)) ~> derivedColumn1",
+				"split1@Matched select(mapColumn(",
+				"          CustomerID,",
+				"          CustomerFullName,",
+				"          OldEmailID,",
+				"          NewPrevEmailID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"select2 alterRow(upsertIf(1==1)) ~> AlterRow1",
+				"derivedColumn1 split(!isNull(CID),",
+				"     disjoint: false) ~> split1@(Matched, NotMatched)",
+				"split1@NotMatched select(mapColumn(",
+				"          CustomerID,",
+				"          CustomerFullName,",
+				"          EmailAddress,",
+				"          NewPrevEmailID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select3",
+				"AlterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          CID as integer,",
+				"          CName as string,",
+				"          EmailID as string,",
+				"          PreviousEmailID as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['CID'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          CID = CustomerID,",
+				"          CName = CustomerFullName,",
+				"          EmailID = OldEmailID,",
+				"          PreviousEmailID = NewPrevEmailID",
+				"     )) ~> sink1",
+				"select3 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          CID as integer,",
+				"          CName as string,",
+				"          EmailID as string,",
+				"          PreviousEmailID as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 2,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          CID = CustomerID,",
+				"          CName = CustomerFullName,",
+				"          EmailID = EmailAddress,",
+				"          PreviousEmailID = NewPrevEmailID",
+				"     )) ~> sink2"
+			]
+		}
+	}
+}

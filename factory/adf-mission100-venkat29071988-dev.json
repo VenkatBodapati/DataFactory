@@ -1,0 +1,9 @@
+{
+	"name": "adf-mission100-venkat29071988-dev",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "65647b06-4fcd-40ae-a4af-e25016fac52c",
+		"tenantId": "296f90a4-e800-4f3f-b0e0-4df920d6d38a"
+	}
+}

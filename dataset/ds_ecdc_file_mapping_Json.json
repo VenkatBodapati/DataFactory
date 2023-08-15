@@ -1,0 +1,37 @@
+{
+	"name": "ds_ecdc_file_mapping_Json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_kv",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Covid_19"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "ecdc_file_list.json",
+				"folderPath": "Covid_19",
+				"fileSystem": "raw"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"BaseUrl": {
+					"type": "string"
+				},
+				"SourceRelativeUrl": {
+					"type": "string"
+				},
+				"SinkFileName": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,29 @@
+{
+	"name": "ds_AzureSQL_Generic",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_Azure_SQL_DB",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"tablename": {
+				"type": "string",
+				"defaultValue": "Customer_Copy"
+			}
+		},
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "SalesLt",
+			"table": {
+				"value": "@dataset().tablename",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,23 @@
+{
+	"name": "ds_adls_product_json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_Adls",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "practise-1/product",
+				"fileSystem": "landing"
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

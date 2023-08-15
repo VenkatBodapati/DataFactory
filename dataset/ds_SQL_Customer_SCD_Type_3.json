@@ -1,0 +1,38 @@
+{
+	"name": "ds_SQL_Customer_SCD_Type_3",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_Azure_SQL_DB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "CID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "CName",
+				"type": "varchar"
+			},
+			{
+				"name": "EmailID",
+				"type": "varchar"
+			},
+			{
+				"name": "PreviousEmailID",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "SalesLT",
+			"table": "Customer_SCD_Type_3"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,136 @@
+{
+	"name": "df_custSQL_CustAddCSV_Join",
+	"properties": {
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "ls_Azure_SQL_DB",
+						"type": "LinkedServiceReference"
+					},
+					"name": "CustomerSQL"
+				},
+				{
+					"linkedService": {
+						"referenceName": "ls_Adls",
+						"type": "LinkedServiceReference"
+					},
+					"name": "CustomerAddressCSV"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ls_Adls",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ADLSParquet"
+				}
+			],
+			"transformations": [
+				{
+					"name": "join"
+				},
+				{
+					"name": "customerid1000Customerid2000"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "sort1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CustomerID as integer,",
+				"          NameStyle as boolean,",
+				"          Title as string,",
+				"          FirstName as string,",
+				"          MiddleName as string,",
+				"          LastName as string,",
+				"          Suffix as string,",
+				"          CompanyName as string,",
+				"          SalesPerson as string,",
+				"          EmailAddress as string,",
+				"          Phone as string,",
+				"          PasswordHash as string,",
+				"          PasswordSalt as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'SalesLT',",
+				"     tableName: 'Customer',",
+				"     isolationLevel: 'NONE') ~> CustomerSQL",
+				"source(output(",
+				"          CustomerID as short,",
+				"          AddressID as short,",
+				"          AddressType as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'landing',",
+				"     folderPath: 'practise-1/MissionADE',",
+				"     fileName: 'SalesLT.CustomerAddress.txt',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> CustomerAddressCSV",
+				"CustomerSQL, CustomerAddressCSV join(CustomerSQL@CustomerID == toInteger(CustomerAddressCSV@CustomerID),",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join",
+				"join filter(CustomerSQL@CustomerID > 10000 && CustomerSQL@CustomerID < 30000) ~> customerid1000Customerid2000",
+				"customerid1000Customerid2000 select(mapColumn(",
+				"          CustomerID = CustomerSQL@CustomerID,",
+				"          NameStyle,",
+				"          Title,",
+				"          FirstName,",
+				"          MiddleName,",
+				"          LastName,",
+				"          Suffix,",
+				"          CompanyName,",
+				"          SalesPerson,",
+				"          EmailAddress,",
+				"          Phone,",
+				"          PasswordHash,",
+				"          PasswordSalt,",
+				"          rowguid = CustomerSQL@rowguid,",
+				"          ModifiedDate = CustomerSQL@ModifiedDate,",
+				"          CA_AddressID = AddressID,",
+				"          CA_AddressType = AddressType,",
+				"          CA_rowguid = CustomerAddressCSV@rowguid,",
+				"          CA_ModifiedDate = CustomerAddressCSV@ModifiedDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sort(asc(CustomerID, true)) ~> sort1",
+				"sort1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'landing',",
+				"     folderPath: 'practise-1/MissionADE',",
+				"     compressionCodec: 'none',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> ADLSParquet"
+			]
+		}
+	}
+}

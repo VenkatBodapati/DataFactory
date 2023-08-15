@@ -1,0 +1,21 @@
+{
+	"name": "ls_SqlServer_onpremise",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"SourceDBName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": "integrated security=False;data source=vm-missionade;initial catalog=@{linkedService().SourceDBName};user id=vbodapati",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiIxZWQ4ZGNhZS1kY2RlLTQxMzYtOGYzMS0yZThjNWFiOTE2MTAiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "OnPremise-SelfHosted-IR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

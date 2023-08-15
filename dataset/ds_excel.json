@@ -1,0 +1,23 @@
+{
+	"name": "ds_excel",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_http_orphan",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Covid_19"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation"
+			},
+			"sheetIndex": 0,
+			"firstRowAsHeader": true
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

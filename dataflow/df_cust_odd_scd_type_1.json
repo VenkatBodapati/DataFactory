@@ -1,0 +1,103 @@
+{
+	"name": "df_cust_odd_scd_type_1",
+	"properties": {
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_adls_mission100_generic",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerTxt"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ls_Azure_SQL_DB",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddOddNumFlag"
+				},
+				{
+					"name": "getOnlyOddRec"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "AlterRow1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     tablename as string ('Customer_dummy')",
+				"}",
+				"source(output(",
+				"          CustomerID as short,",
+				"          NameStyle as boolean,",
+				"          Title as string,",
+				"          FirstName as string,",
+				"          MiddleName as string,",
+				"          LastName as string,",
+				"          Suffix as string,",
+				"          CompanyName as string,",
+				"          SalesPerson as string,",
+				"          EmailAddress as string,",
+				"          Phone as string,",
+				"          PasswordHash as string,",
+				"          PasswordSalt as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> CustomerTxt",
+				"CustomerTxt derive(IsOddNum = iif(toInteger(CustomerID)%2 == 1,1,0),",
+				"          C_name = concat(FirstName, ' ', LastName)) ~> AddOddNumFlag",
+				"AddOddNumFlag filter(IsOddNum == 1) ~> getOnlyOddRec",
+				"getOnlyOddRec select(mapColumn(",
+				"          CustomerID,",
+				"          C_name,",
+				"          EmailAddress",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 alterRow(upsertIf(1==1)) ~> AlterRow1",
+				"AlterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          CID as integer,",
+				"          CName as string,",
+				"          EmailID as string",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'SalesLT',",
+				"     tableName: 'Customer_dummy',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: true,",
+				"     keys:['CID'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          CID = CustomerID,",
+				"          CName = C_name,",
+				"          EmailID = EmailAddress",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

@@ -1,0 +1,133 @@
+{
+	"name": "06_pl_bulk_copy_files_ADLS_SQL",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "output",
+							"wildcardFileName": "*.csv",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "truncate table SalesLt.Product_copy",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"parallelCopies": 1,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_adls_ouput_folder",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_SQL_Dynamic_table",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": "salesLt",
+							"table": "product_copy"
+						}
+					}
+				]
+			},
+			{
+				"name": "Set variable Read",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Copy data1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "RowsRead",
+					"value": {
+						"value": "@string(activity('Copy data1').output.rowsRead)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable1_write",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Copy data1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "RowsCopied",
+					"value": {
+						"value": "@string(activity('Copy data1').output.rowsCopied)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"RowsRead": {
+				"type": "String"
+			},
+			"RowsCopied": {
+				"type": "String"
+			},
+			"totalfiles": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Self"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-09T11:14:15Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

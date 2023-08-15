@@ -1,0 +1,26 @@
+{
+	"name": "ds_adls_processed_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_kv",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Covid_19"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "processed"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

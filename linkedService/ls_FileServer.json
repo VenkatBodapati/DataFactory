@@ -1,0 +1,19 @@
+{
+	"name": "ls_FileServer",
+	"properties": {
+		"annotations": [],
+		"type": "FileServer",
+		"typeProperties": {
+			"host": "\\\\venkat29071988adls.file.core.windows.net\\fs-mission-ade",
+			"userId": "venkat29071988adls",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_AzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "venkat29071988adls-storageKey"
+			}
+		}
+	}
+}

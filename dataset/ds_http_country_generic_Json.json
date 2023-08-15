@@ -1,0 +1,30 @@
+{
+	"name": "ds_http_country_generic_Json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_HttpServer_generic",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"countryname": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": {
+					"value": "@dataset().countryname",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

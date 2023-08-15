@@ -1,0 +1,42 @@
+{
+	"name": "ds_sqlserver_onpremise_dynamic",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_SqlServer_onpremise",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"SourceDBName": {
+					"value": "@dataset().DBName",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"schema": {
+				"type": "string"
+			},
+			"table": {
+				"type": "string"
+			},
+			"DBName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Self"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().table",
+				"type": "Expression"
+			}
+		}
+	}
+}

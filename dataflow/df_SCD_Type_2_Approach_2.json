@@ -1,0 +1,141 @@
+{
+	"name": "df_SCD_Type_2_Approach_2",
+	"properties": {
+		"folder": {
+			"name": "Self"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_AzureSql_dynamic_kv",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_AzureSql_dynamic_kv",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerDestination"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_AzureSql_dynamic_kv",
+						"type": "DatasetReference"
+					},
+					"name": "CustDestinationInsert"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_AzureSql_dynamic_kv",
+						"type": "DatasetReference"
+					},
+					"name": "CustDestUpdate"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "lookup1"
+				},
+				{
+					"name": "MatchedRecords"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "AlterRow1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CustomerID as long,",
+				"          CustomerName as string,",
+				"          Phone as string,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> CustomerSource",
+				"source(output(",
+				"          CustSurrKey as long,",
+				"          CustomerID as long,",
+				"          CustomerName as string,",
+				"          Phone as string,",
+				"          StartDate as timestamp,",
+				"          EndDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> CustomerDestination",
+				"CustomerSource derive(NewStartDate = fromUTC(currentTimestamp(), 'India Standard Time')) ~> derivedColumn1",
+				"derivedColumn1, CustomerDestination lookup(CustomerSource@CustomerID == CustomerDestination@CustomerID,",
+				"     multiple: true,",
+				"     broadcast: 'auto')~> lookup1",
+				"lookup1 filter(!isNull(CustomerDestination@CustomerID)) ~> MatchedRecords",
+				"MatchedRecords select(mapColumn(",
+				"          CustSurrKey,",
+				"          CustomerID = CustomerDestination@CustomerID,",
+				"          CustomerName = CustomerDestination@CustomerName,",
+				"          Phone = CustomerDestination@Phone,",
+				"          StartDate,",
+				"          EndDate = NewStartDate,",
+				"          ModifiedDate = CustomerDestination@ModifiedDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 alterRow(updateIf(true())) ~> AlterRow1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 2,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          CustomerID,",
+				"          CustomerName,",
+				"          Phone,",
+				"          StartDate = NewStartDate,",
+				"          ModifiedDate",
+				"     )) ~> CustDestinationInsert",
+				"AlterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['CustSurrKey'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          CustSurrKey,",
+				"          CustomerID,",
+				"          CustomerName,",
+				"          Phone,",
+				"          StartDate,",
+				"          EndDate,",
+				"          ModifiedDate",
+				"     )) ~> CustDestUpdate"
+			]
+		}
+	}
+}

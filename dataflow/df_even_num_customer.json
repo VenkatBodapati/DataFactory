@@ -1,0 +1,73 @@
+{
+	"name": "df_even_num_customer",
+	"properties": {
+		"folder": {
+			"name": "Mission_ADE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_adls_mission100_generic",
+						"type": "DatasetReference"
+					},
+					"name": "Customer"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_AzureSQL_Generic",
+						"type": "DatasetReference"
+					},
+					"name": "SQLdb"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddColToBeInsertedFlag"
+				},
+				{
+					"name": "GetOnlyEvenRecords"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CustomerID as short,",
+				"          NameStyle as boolean,",
+				"          Title as string,",
+				"          FirstName as string,",
+				"          MiddleName as string,",
+				"          LastName as string,",
+				"          Suffix as string,",
+				"          CompanyName as string,",
+				"          SalesPerson as string,",
+				"          EmailAddress as string,",
+				"          Phone as string,",
+				"          PasswordHash as string,",
+				"          PasswordSalt as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Customer",
+				"Customer derive(ToBeInsertedFlag = iif(toInteger(CustomerID)%2 == 0, 1, 0)) ~> AddColToBeInsertedFlag",
+				"AddColToBeInsertedFlag filter(toInteger(ToBeInsertedFlag) == 1) ~> GetOnlyEvenRecords",
+				"GetOnlyEvenRecords sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     preSQLs:['SET IDENTITY_INSERT SalesLT.Customer_Copy ON'],",
+				"     postSQLs:['SET IDENTITY_INSERT SalesLT.Customer_Copy OFF'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> SQLdb"
+			]
+		}
+	}
+}
